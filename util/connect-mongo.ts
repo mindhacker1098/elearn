@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-const MONGO_URI = "mongodb://localhost:27017/Elearning";
+const MONGO_URI = "mongodb+srv://mindhacker1098:spn1098@cluster0.t66x9u5.mongodb.net/elearn?retryWrites=true&w=majority";
 const cached: { connection?: typeof mongoose; promise?: Promise<typeof mongoose> } = {};
 async function connectMongo() {
     if (!MONGO_URI) {
