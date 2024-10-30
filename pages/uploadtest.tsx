@@ -1,20 +1,25 @@
 import { useState } from "react";
-import { 
-  Flex, 
-  Box, 
-  Input, 
-  Button, 
-  VStack, 
-  Textarea, 
-  Select,
-} from "@chakra-ui/react";
+import { Flex, Box, Input, Button, VStack, Textarea, Select } from "@chakra-ui/react";
 import { useRouter } from "next/router";
 import axios from "axios";
 import { notify } from "@/components/Helpers/toaster"; // Assuming you have a toaster helper
 
+interface TestDetails {
+  date: string;
+  startTime: string;
+  endTime: string;
+  isFlexible: string;
+  duration: string;
+  visibleInfo: string;
+  questionsPerMark: string;
+  numberOfQuestions: string;
+  description: string;
+  courseId: string;
+}
+
 export default function CreateTest() {
   const router = useRouter();
-  const [testDetails, setTestDetails] = useState({
+  const [testDetails, setTestDetails] = useState<TestDetails>({
     date: "",
     startTime: "",
     endTime: "",
@@ -27,17 +32,19 @@ export default function CreateTest() {
     courseId: ""
   });
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value, type, checked } = e.target as HTMLInputElement;
     setTestDetails((prevDetails) => ({
       ...prevDetails,
-      [name]: type === "checkbox" ? checked : value
+      [name]: type === "checkbox" ? String(checked) : value
     }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-   console.log("submit clicked");
+    console.log("submit clicked");
     try {
       await axios.post("/api/testapi/uploadtest", testDetails);
       notify("success", "Test created successfully");
@@ -55,17 +62,12 @@ export default function CreateTest() {
       minH="88vh"
       bgGradient="linear(to-r, rgb(254,254,255), rgb(241,246,255),rgb(241,246,255),rgb(253,254,255))"
       w="100%"
-
     >
-      <Box 
-        p={8}
-        w={"100%"}
-      >
-        <VStack spacing={4} onSubmit={handleSubmit} w={"100%"}>
+      <Box p={8} w={"100%"}>
+        <VStack spacing={4} as="form" onSubmit={handleSubmit} w={"100%"}>
           <Input 
             type="date" 
             name="date"
-         
             w={"400px"}
             value={testDetails.date} 
             onChange={handleChange} 
@@ -103,16 +105,14 @@ export default function CreateTest() {
               />
             </>
           ) : (
-            <>
-              <Input 
-                w={"400px"}
-                type="time" 
-                name="startTime"
-                value={testDetails.startTime} 
-                onChange={handleChange} 
-                placeholder="Start Time"
-              />
-            </>
+            <Input 
+              w={"400px"}
+              type="time" 
+              name="startTime"
+              value={testDetails.startTime} 
+              onChange={handleChange} 
+              placeholder="Start Time"
+            />
           )}
    
           <Input 
@@ -168,7 +168,7 @@ export default function CreateTest() {
             placeholder="Course ID"
           />
 
-          <Button onClick={handleSubmit} colorScheme="blue">
+          <Button type="submit" colorScheme="blue">
             Create Test
           </Button>
         </VStack>

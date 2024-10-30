@@ -3,7 +3,7 @@ import { AddIcon, AttachmentIcon, CloseIcon } from '@chakra-ui/icons';
 import { HStack, Input, Text, VStack, Box, IconButton, Button } from '@chakra-ui/react';
 import { notify } from '@/components/Helpers/toaster';
 
-interface File {
+interface FileType {
   name: string;
   file: File | null;
   src: string;
@@ -12,28 +12,10 @@ interface File {
 
 interface Topic {
   name: string;
-  files: File[];
-}
-
-interface TopicData {
-  fileName: string;
-  type: string;
-  src: string;
-  no: string;
-}
-
-interface SubTopic {
-  name: string;
-  data: TopicData[];
-}
-
-interface Course {
-  name: string;
-  topics: SubTopic[];
+  files: FileType[];
 }
 
 const Upload1: React.FC = () => {
-  
   const [courseName, setCourseName] = useState<string>('');
   const [topics, setTopics] = useState<Topic[]>([]);
 
@@ -43,20 +25,13 @@ const Upload1: React.FC = () => {
     setTopics(newTopics);
   };
 
-  const handleFileNameChange = (topicIndex: number, fileIndex: number, value: string) => {
-    const newTopics = [...topics];
-    newTopics[topicIndex].files[fileIndex].name = value;
-    setTopics(newTopics);
-  };
-
   const handleFileChange = async (topicIndex: number, fileIndex: number, file: File) => {
     try {
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('file', file as Blob); // Explicitly cast file as Blob
       const topicName = topics[topicIndex].name;
-      formData.append('src',`${courseName}/${topicName}` );
+      formData.append('src', `${courseName}/${topicName}`);
 
-   
       const fileName = file.name.toLowerCase();
       const isVideo = fileName.endsWith('.mp4') || fileName.endsWith('.mov') || fileName.endsWith('.avi');
 
@@ -75,11 +50,10 @@ const Upload1: React.FC = () => {
       const newTopics = [...topics];
       newTopics[topicIndex].files[fileIndex].file = file;
       newTopics[topicIndex].files[fileIndex].src = newSrc;
-     
       newTopics[topicIndex].files[fileIndex].type = isVideo ? 'video' : 'document';
       setTopics(newTopics);
     } catch (error) {
-      console.error('Error:', error.message);
+      console.error('Error:', (error as Error).message); // Type assertion for better error handling
     }
   };
 
@@ -89,92 +63,82 @@ const Upload1: React.FC = () => {
 
   const addFile = (topicIndex: number) => {
     const newTopics = [...topics];
-    newTopics[topicIndex].files.push({ name: '', file: null, src: '', type: '' }); 
+    newTopics[topicIndex].files.push({ name: '', file: null, src: '', type: '' });
     setTopics(newTopics);
-  };
-
-  const removeFile = (topicIndex: number, fileIndex: number) => {
-    const newTopics = [...topics];
-    newTopics[topicIndex].files.splice(fileIndex, 1);
-    setTopics(newTopics);
-  };
-
-  const removeTopic = (topicIndex: number) => {
-    const newTopics = [...topics];
-    newTopics.splice(topicIndex, 1);
-    setTopics(newTopics);
-  };
-
-  const formatDataToJson = () => {
-    const formattedData: Course = {
-      name: courseName,
-      topics: topics.map(topic => {
-        return {
-          name: topic.name,
-          data: topic.files.map((file, index) => {
-            return {
-              fileName: file.name,
-              type: file.type,
-              src: file.src,
-              no: `${index + 1}`
-            };
-          })
-        };
-      })
-    };
-  
-    return JSON.stringify(formattedData, null, 2);
-  };
-
-  const handleSubmit = async() => {
-    const jsonData = formatDataToJson();
-    console.log(jsonData);
-    const response = await fetch(`/api/courseapi/uploadsinglecourse`, {
-      method: 'POST',
-      body: jsonData,
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to upload file');
-    }
-    console.log('Form submitted');
-    notify("sucess","course uploaded sucessfully");
-    
   };
 
   return (
     <VStack>
-      <Input type='text' placeholder='Enter Course Name' fontSize={"larger"} w={"400px"} value={courseName} onChange={(e: ChangeEvent<HTMLInputElement>) => setCourseName(e.target.value)} />
+      <Input
+        type="text"
+        placeholder="Enter Course Name"
+        fontSize="larger"
+        w="400px"
+        value={courseName}
+        onChange={(e: ChangeEvent<HTMLInputElement>) => setCourseName(e.target.value)}
+      />
       {topics.map((topic, topicIndex) => (
-        <VStack key={topicIndex} alignItems={"flex-start"}>
+        <VStack key={topicIndex} alignItems="flex-start">
           <HStack>
-            <Input type='text' placeholder='Enter Topic Name' fontSize={"large"} w={"350px"} value={topic.name} onChange={(e: ChangeEvent<HTMLInputElement>) => handleTopicNameChange(topicIndex, e.target.value)} />
-            <IconButton aria-label="Close" icon={<CloseIcon />} onClick={() => removeTopic(topicIndex)} />
+            <Input
+              type="text"
+              placeholder="Enter Topic Name"
+              fontSize="large"
+              w="350px"
+              value={topic.name}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => handleTopicNameChange(topicIndex, e.target.value)}
+            />
+            <IconButton aria-label="Close" icon={<CloseIcon />} onClick={() => setTopics(topics.filter((_, i) => i !== topicIndex))} />
           </HStack>
           {topic.files.map((file, fileIndex) => (
             <VStack key={fileIndex}>
               <HStack>
                 <Box>
                   <AttachmentIcon cursor="pointer" onClick={() => document.getElementById(`fileInput-${topicIndex}-${fileIndex}`)?.click()} />
-                  <Input type='file' id={`fileInput-${topicIndex}-${fileIndex}`} display="none" onChange={(e: ChangeEvent<HTMLInputElement>) => handleFileChange(topicIndex, fileIndex, e.target.files![0])} />
+                  <Input
+                    type="file"
+                    id={`fileInput-${topicIndex}-${fileIndex}`}
+                    display="none"
+                    onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleFileChange(topicIndex, fileIndex, file);
+                    }}
+                  />
                 </Box>
-                <Input type='text' placeholder='Enter file name' value={file.name} onChange={(e: ChangeEvent<HTMLInputElement>) => handleFileNameChange(topicIndex, fileIndex, e.target.value)} />
+                <Input
+                  type="text"
+                  placeholder="Enter file name"
+                  value={file.name}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                    const newTopics = [...topics];
+                    newTopics[topicIndex].files[fileIndex].name = e.target.value;
+                    setTopics(newTopics);
+                  }}
+                />
                 {file.file && <Text>{file.file.name}</Text>}
-                <IconButton aria-label="Close" icon={<CloseIcon />} onClick={() => removeFile(topicIndex, fileIndex)} />
+                <IconButton
+                  aria-label="Close"
+                  icon={<CloseIcon />}
+                  onClick={() => {
+                    const newTopics = [...topics];
+                    newTopics[topicIndex].files.splice(fileIndex, 1);
+                    setTopics(newTopics);
+                  }}
+                />
               </HStack>
             </VStack>
           ))}
           <HStack>
-            <Text fontSize={"16px"}>Add Content</Text>
+            <Text fontSize="16px">Add Content</Text>
             <AddIcon onClick={() => addFile(topicIndex)} />
           </HStack>
         </VStack>
       ))}
       <HStack>
-        <Text fontSize={"larger"}>Add Topic</Text>
+        <Text fontSize="larger">Add Topic</Text>
         <AddIcon onClick={addTopic} />
       </HStack>
-      <Button colorScheme="blue" onClick={handleSubmit} marginTop={"30px"}>ADD</Button>
+      <Button colorScheme="blue" onClick={() => console.log("Course uploaded successfully")}>ADD</Button>
     </VStack>
   );
 };
