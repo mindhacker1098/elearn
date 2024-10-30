@@ -92,7 +92,7 @@ export default function SignUp() {
   };
 
   useEffect(() => {
-    if (!coursename.length) {
+    if (coursename.length===0) {
       setCourseName();
     }
   }, [coursename, setCourseName]);
