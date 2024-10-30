@@ -3,7 +3,7 @@ import { ArrowForwardIcon, ChevronLeftIcon, ChevronRightIcon, SearchIcon } from 
 import { Button, HStack, Text, VStack, Box, Input } from "@chakra-ui/react";
 import axios from "axios";
 import { useRouter } from "next/router";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { GoDotFill } from "react-icons/go";
 import { useCourseIdStore } from "../Zustand/courseStore";
 import { Coursewithid } from "../types/Course";
@@ -13,7 +13,8 @@ function Home2() {
   const setCourseName = useCourseIdStore((state: any) => state.setCourseName);
   const coursename: Coursewithid[] = useCourseIdStore((state: any) => state.coursename);
 
-  const data = {
+  // Define data with numeric keys explicitly
+  const data: Record<number, { text1: string; text2: string; text3: string; img: string }> = {
     0: {
       text1: "Advanced E-learning Management",
       text2: "Learn anywhere in the world",
@@ -40,11 +41,12 @@ function Home2() {
   const [search, setSearch] = useState<Coursewithid[]>([]);
   const [token, setToken] = useState<string | null>(null);
 
-  const changeContent = (newNo: number) => {
+  // Define changeContent with useCallback to stabilize function reference
+  const changeContent = useCallback((newNo: number) => {
     newNo = (newNo + 3) % 3;
     setContent(data[newNo]);
     setNo(newNo);
-  };
+  }, []);
 
   const coursepage = async () => {
     if (!token) {
