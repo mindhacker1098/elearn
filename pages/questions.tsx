@@ -1,5 +1,4 @@
-// pages/questions.tsx
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import {
   Box,
   Button,
@@ -22,24 +21,34 @@ const QuestionsPage: React.FC = () => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<string[]>([]);
   const [submitted, setSubmitted] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(10); 
+  const [timeLeft, setTimeLeft] = useState(10);
   const router = useRouter();
 
-  var testObject = JSON.parse(decodeURIComponent(router.query.test));
+  const testString = typeof router.query.test === 'string' ? router.query.test : undefined;
+  const testObject = testString ? JSON.parse(decodeURIComponent(testString)) : null;
 
-  const Timer=async ()=>{
-    const response =await axios.get(`/api/testapi/gettimerbytime/${testObject.date}_${testObject.startTime}/${testObject.duration}`);
-    const data = response.data;
-    console.log(data.data)
-    setTimeLeft(data.data);
-  }
+  const Timer = useCallback(async () => {
+    if (testObject) {
+      try {
+        const response = await axios.get(
+          `/api/testapi/gettimerbytime/${testObject.date}_${testObject.startTime}/${testObject.duration}`
+        );
+        const data = response.data;
+        setTimeLeft(data.data);
+      } catch (error) {
+        console.error("Error fetching timer data:", error);
+      }
+    }
+  }, [testObject]);
 
   useEffect(() => {
-    if (!questions) {
-      setQuestions(localStorage.getItem("x-es-token")?.substring(2), testObject.numberOfQuestions);
+    if (!router.isReady || !testObject) return;
+
+    if (!questions && testObject) {
+      setQuestions(localStorage.getItem("x-es-token")?.substring(2) ?? "", testObject.numberOfQuestions);
     }
 
-   Timer();
+    Timer();
     const timer = setInterval(() => {
       setTimeLeft((prevTime) => {
         if (prevTime <= 1) {
@@ -52,7 +61,7 @@ const QuestionsPage: React.FC = () => {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [questions, setQuestions]);
+  }, [questions, setQuestions, Timer, testObject, router.isReady]);
 
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
@@ -67,7 +76,7 @@ const QuestionsPage: React.FC = () => {
   };
 
   const handleNext = () => {
-    if (currentQuestionIndex < questions.length - 1) {
+    if (questions && currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     }
   };
@@ -81,11 +90,10 @@ const QuestionsPage: React.FC = () => {
   const handleSubmit = () => {
     setSubmitted(true);
     console.log('Submitted answers:', answers);
-   
   };
 
-  const currentQuestion = questions?.[currentQuestionIndex];
-  const totalQuestions = questions?.length || 0;
+  const currentQuestion = questions ? questions[currentQuestionIndex] : null;
+  const totalQuestions = questions ? questions.length : 0;
 
   return (
     <Box maxWidth="600px" mx="auto" mt="8">
