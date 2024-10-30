@@ -1,0 +1,41 @@
+{
+  "name": "elearn",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "type-check": "tsc"
+  },
+  "dependencies": {
+    "@chakra-ui/icons": "^2.1.1",
+    "@chakra-ui/react": "^2.8.2",
+    "@emotion/react": "^11.11.4",
+    "@emotion/styled": "^11.11.5",
+    "@fontsource/open-sans": "^5.0.27",
+    "@fontsource/raleway": "^5.0.17",
+    "@lottiefiles/react-lottie-player": "^3.5.3",
+    "axios": "^1.6.8",
+    "framer-motion": "^11.0.28",
+    "lottie-react": "^2.4.0",
+    "mongoose": "^8.3.2",
+    "multer": "^1.4.5-lts.1",
+    "next": "14.1.4",
+    "react": "^18.2.0",
+    "react-dom": "^18",
+    "react-icons": "^5.0.1",
+    "react-toastify": "^10.0.5",
+    "zustand": "^4.5.2"
+  },
+  "devDependencies": {
+    "@types/multer": "^1.4.12",
+    "@types/node": "20.16.5",
+    "@types/react": "18.3.7",
+    "@types/react-dom": "^18",
+    "eslint": "^8",
+    "eslint-config-next": "14.1.4",
+    "typescript": "5.6.2"
+  }
+}
